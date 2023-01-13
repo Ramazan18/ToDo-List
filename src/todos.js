@@ -10,5 +10,5 @@ export async function useTodos() {
     loaded.value = true
   }
 
-  return {users}
+  return {todos}
 }

@@ -1,10 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onBeforeUnmount, onMounted, computed, watch, onBeforeMount } from 'vue'
 
 const todos = ref([])
+const list =ref<List[] | null>([])
+const listErrors = ref(false)
 const name = ref('')
-const input_content = ref('')
-const input_category = ref(null)
+const input_content = ref('') 
+
+onBeforeMount(async ()=> {
+	const{ data, isError } = await useFetch<List[]>(
+		'https://dummyjson.com/todos'
+		);
+
+	list.value = data.value;
+	listErrors.value = isError.value;
+})
 
 watch(name, (newVal) => {
 	localStorage.setItem('name', newVal)
@@ -21,12 +31,11 @@ const todos_asc = computed(() => todos.value.sort((a,b) =>{
 }))
 
 const addTodo = () => {
-	if (input_content.value.trim() === '' || input_category.value === null) {
+	if (input_content.value.trim() === '') {
 		return
 	}
 	todos.value.push({
 		content: input_content.value,
-		category: input_category.value,
 		done: false,
 		editable: false,
 		createdAt: new Date().getTime()
@@ -54,34 +63,11 @@ onMounted(() => {
 					type="text" 
 					name="content" 
 					id="content" 
-					placeholder="e.g. make a video"
+					placeholder="e.g. make a task"
 					v-model="input_content" />
 				
 				<h4>Pick the importance of your deals</h4>
 				<div class="options">
-
-					<label>
-						<input 
-							type="radio" 
-							name="category" 
-							id="category1" 
-							value="business"
-							v-model="input_category" />
-						<span class="bubble not"></span>
-						<div>Not so much</div>
-					</label>
-
-					<label>
-						<input 
-							type="radio" 
-							name="category" 
-							id="category2" 
-							value="personal"
-							v-model="input_category" />
-						<span class="bubble important"></span>
-						<div>Very important</div>
-					</label>
-
 				</div>
 
 				<input type="submit" value="Add todo" />
@@ -92,14 +78,9 @@ onMounted(() => {
 			<h3>TODO LIST</h3>
 			<div class="list" id="todo-list">
 
-				<div v-for="todo in todos_asc" :class="`todo-item ${todo.done && 'done'}`">
+				<div v-for="todo in todos_asc" :class="`todo-item ${todo.done && 'done'}`" >
 					<label>
 						<input type="checkbox" v-model="todo.done" />
-						<span :class="`bubble ${
-							todo.category == 'not' 
-								? 'not' 
-								: 'important'
-						}`"></span>
 					</label>
 
 					<div class="todo-content">
@@ -110,6 +91,8 @@ onMounted(() => {
 						<button class="delete" @click="removeTodo(todo)">Delete</button>
 					</div>
 				</div>
+
+				<pre v-if="list">{{ list }}</pre>
 
 			</div>
 		</section>
