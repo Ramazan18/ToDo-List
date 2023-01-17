@@ -1,24 +1,10 @@
 <script setup lang="ts">
-import { ref, onBeforeUnmount, onMounted, computed, watch, onBeforeMount } from 'vue'
+import { ref, onBeforeUnmount, onMounted, computed, watch, onBeforeMount, defineComponent } from 'vue'
+import Todos from './components/todos.vue'
 
 const todos = ref([])
-const list =ref<List[] | null>([])
-const listErrors = ref(false)
 const name = ref('')
 const input_content = ref('') 
-
-onBeforeMount(async ()=> {
-	const{ data, isError } = await useFetch<List[]>(
-		'https://dummyjson.com/todos'
-		);
-
-	list.value = data.value;
-	listErrors.value = isError.value;
-})
-
-watch(name, (newVal) => {
-	localStorage.setItem('name', newVal)
-})
 
 watch(todos, (newVal) => {
 	localStorage.setItem('todos', JSON.stringify(newVal))
@@ -65,10 +51,6 @@ onMounted(() => {
 					id="content" 
 					placeholder="e.g. make a task"
 					v-model="input_content" />
-				
-				<h4>Pick the importance of your deals</h4>
-				<div class="options">
-				</div>
 
 				<input type="submit" value="Add todo" />
 			</form>
@@ -78,9 +60,10 @@ onMounted(() => {
 			<h3>TODO LIST</h3>
 			<div class="list" id="todo-list">
 
-				<div v-for="todo in todos_asc" :class="`todo-item ${todo.done && 'done'}`" >
+				<div v-for="todo in todos_asc" :class="`todo-item ${todo.done && 'done'}`">
 					<label>
 						<input type="checkbox" v-model="todo.done" />
+						<span class="bubble"></span>
 					</label>
 
 					<div class="todo-content">
@@ -92,7 +75,9 @@ onMounted(() => {
 					</div>
 				</div>
 
-				<pre v-if="list">{{ list }}</pre>
+					<div>
+						<Todos />
+					</div>
 
 			</div>
 		</section>
